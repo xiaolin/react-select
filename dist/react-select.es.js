@@ -637,8 +637,14 @@ var Select$1 = function (_React$Component) {
 			return _this[fn] = _this[fn].bind(_this);
 		});
 
+		var inputValue = '';
+		if (!props.multi && props.keepCursorAtEnd && props.value) {
+			var valueArray = _this.getValueArray(props.value);
+			inputValue = valueArray[0][props.labelKey];
+		}
+
 		_this.state = {
-			inputValue: '',
+			inputValue: inputValue,
 			isFocused: false,
 			isOpen: false,
 			isPseudoFocused: false,
@@ -954,7 +960,7 @@ var Select$1 = function (_React$Component) {
 				isOpen: false,
 				isPseudoFocused: false
 			};
-			if (this.props.onBlurResetsInput) {
+			if (this.props.onBlurResetsInput && !this.props.keepCursorAtEnd) {
 				onBlurredState.inputValue = this.handleInputValueChange('');
 			}
 			this.setState(onBlurredState);
@@ -966,6 +972,9 @@ var Select$1 = function (_React$Component) {
 
 			if (this.state.inputValue !== event.target.value) {
 				newInputValue = this.handleInputValueChange(newInputValue);
+				if (newInputValue.length === 0 && this.props.keepCursorAtEnd && !this.props.multi) {
+					this.popValue();
+				}
 			}
 
 			this.setState({
@@ -1217,10 +1226,11 @@ var Select$1 = function (_React$Component) {
 					}
 				});
 			} else {
+				var inputValue = this.props.keepCursorAtEnd ? value[this.props.labelKey] : '';
 				this.setState({
-					inputValue: this.handleInputValueChange(''),
+					inputValue: this.handleInputValueChange(inputValue),
 					isOpen: !this.props.closeOnSelect,
-					isPseudoFocused: this.state.isFocused
+					isPseudoFocused: this.props.keepCursorAtEnd ? false : this.state.isFocused
 				}, function () {
 					_this4.setValue(value);
 				});
@@ -1480,6 +1490,7 @@ var Select$1 = function (_React$Component) {
 				'aria-labelledby': this.props['aria-labelledby'],
 				'aria-label': this.props['aria-label'],
 				className: className,
+				autoComplete: 'off',
 				tabIndex: this.props.tabIndex,
 				onBlur: this.handleInputBlur,
 				onChange: this.handleInputChange,
@@ -1826,6 +1837,7 @@ Select$1.propTypes = {
 	instanceId: PropTypes.string, // set the components instanceId
 	isLoading: PropTypes.bool, // whether the Select is loading externally or not (such as options being loaded)
 	joinValues: PropTypes.bool, // joins multiple values into a single form field with the delimiter (legacy mode)
+	keepCursorAtEnd: PropTypes.bool, // keeps the cursor at the end of the input (for non multi selects)
 	labelKey: PropTypes.string, // path of the label value in option objects
 	matchPos: PropTypes.string, // (any|start) match the start or entire string when filtering
 	matchProp: PropTypes.string, // (any|label|value) which option property to filter on
@@ -1894,6 +1906,7 @@ Select$1.defaultProps = {
 	inputProps: {},
 	isLoading: false,
 	joinValues: false,
+	keepCursorAtEnd: false,
 	labelKey: 'label',
 	matchPos: 'any',
 	matchProp: 'any',
